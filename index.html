@@ -1,4 +1,4 @@
- <!doctype html>
+<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MDC Quiz</title>
@@ -56,6 +56,23 @@ th{text-align:left;color:var(--mut);font-size:12px;padding:6px 8px;border-bottom
 td{padding:9px 8px;border-bottom:1px solid var(--line)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--mut)}
 .dot.on{background:var(--good)}.dot.dn{background:var(--acc)}
+
+/* ---- compact join form (desktop, no scroll) ---- */
+.form-grid{display:grid;gap:10px 14px}
+.form-grid label{margin:0}
+.form-grid .full{grid-column:1/-1}
+@media(min-width:640px){
+  body{align-items:center;padding:20px}
+  .form-grid{grid-template-columns:1fr 1fr}
+  .card.compact{margin-top:0;padding:22px 26px;max-width:560px}
+  .card.compact h1{font-size:26px;margin-bottom:2px}
+  .card.compact .sub{margin:0 0 12px;font-size:14px}
+  .card.compact label{font-size:13px}
+  .card.compact input,.card.compact select{padding:9px 12px;margin-top:4px}
+  .card.compact .btn{margin-top:8px;padding:12px}
+  .card.compact .lnk{margin-top:10px}
+  .card.compact .msg{min-height:1.2em;font-size:13px}
+}
 </style></head><body><div id="app"></div>
 <script>
 const Q0=[
@@ -124,15 +141,21 @@ const unsub=()=>{subs.forEach(f=>f());subs=[];clearInterval(tick)};
 function home(){
   unsub(); st={};
   const ySel=ls.get('mdc_year'), dSel=ls.get('mdc_dept');
-  show(`<main class="card"><h1>MDC Quiz</h1><p class="sub">Hey there! Pop in the room code your host shared and fill in your details.</p>
-  <label>Room code<input id="rc" maxlength="5" placeholder="ABCDE" autocapitalize="characters" value="${esc(location.hash.slice(1).slice(0,5))}"></label>
-  <label>Your display name<input id="nm" maxlength="20" placeholder="e.g. Priya" value="${esc(ls.get('mdc_name')||'')}"></label>
-  <label>Mail ID<input id="em" type="email" inputmode="email" autocomplete="email" placeholder="e.g. priya@college.edu" value="${esc(ls.get('mdc_mail')||'')}"></label>
-  <label>Registration number<input id="rn" maxlength="20" placeholder="e.g. 21CS1234" value="${esc(ls.get('mdc_reg')||'')}"></label>
-  <label>Year<select id="yr">${YEARS.map(y=>`<option${y===ySel?' selected':''}>${esc(y)}</option>`).join('')}</select></label>
-  <label>Department<select id="dp">${DEPTS.map(d=>`<option${d===dSel?' selected':''}>${esc(d)}</option>`).join('')}</select></label>
-  <button class="btn" onclick="join()">Join the room →</button><p id="msg" class="msg"></p>
-  <a class="lnk" onclick="openHost()">Admin portal →</a></main>`);
+  show(`<main class="card compact">
+    <h1>MDC Quiz</h1>
+    <p class="sub">Pop in the room code your host shared and fill in your details.</p>
+    <div class="form-grid">
+      <label class="full">Your display name<input id="nm" maxlength="20" placeholder="e.g. Priya" value="${esc(ls.get('mdc_name')||'')}"></label>
+      <label class="full">Mail ID<input id="em" type="email" inputmode="email" autocomplete="email" placeholder="e.g. priya@college.edu" value="${esc(ls.get('mdc_mail')||'')}"></label>
+      <label>Registration number<input id="rn" maxlength="20" placeholder="e.g. 21CS1234" value="${esc(ls.get('mdc_reg')||'')}"></label>
+      <label>Year<select id="yr">${YEARS.map(y=>`<option${y===ySel?' selected':''}>${esc(y)}</option>`).join('')}</select></label>
+      <label>Department<select id="dp">${DEPTS.map(d=>`<option${d===dSel?' selected':''}>${esc(d)}</option>`).join('')}</select></label>
+      <label>Room code<input id="rc" maxlength="5" placeholder="ABCDE" autocapitalize="characters" value="${esc(location.hash.slice(1).slice(0,5))}"></label>
+      <button class="btn full" onclick="join()">Join the room →</button>
+    </div>
+    <p id="msg" class="msg"></p>
+    <a class="lnk" onclick="openHost()">Admin portal →</a>
+  </main>`);
 }
 
 async function join(){
