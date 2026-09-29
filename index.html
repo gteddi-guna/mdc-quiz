@@ -76,10 +76,21 @@ td{padding:9px 8px;border-bottom:1px solid var(--line)}
 
 /* ---- top participants modal ---- */
 .modal{position:fixed;inset:0;background:rgba(11,31,92,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:999;backdrop-filter:blur(3px)}
-.modal-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 24px;max-width:420px;width:100%;box-shadow:0 25px 60px #0007;animation:pop .18s ease-out}
+.modal-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 24px;max-width:520px;width:100%;box-shadow:0 25px 60px #0007;animation:pop .18s ease-out}
 @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
 .modal-card h2{margin:0 0 14px}
 .modal-card .btn{margin-top:16px}
+
+/* ---- histogram ---- */
+.hist{display:flex;flex-direction:column;margin:6px 0 4px}
+.hist-bars{display:flex;align-items:flex-end;gap:10px;padding:26px 4px 0;border-bottom:2px solid var(--line)}
+.hist-col{flex:1;min-width:0;height:180px;display:flex;align-items:flex-end;justify-content:center}
+.hist-bar{width:100%;max-width:64px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,var(--acc),var(--acc2));position:relative;min-height:6px;transition:height .45s cubic-bezier(.4,0,.2,1)}
+.hist-bar.me{background:linear-gradient(180deg,#fbbf24,#d97706);box-shadow:0 0 0 2px #fbbf2455}
+.hist-val{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:800;color:var(--ink);white-space:nowrap}
+.hist-names{display:flex;gap:10px;padding:8px 4px 0}
+.hist-names .nm-col{flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--mut);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-names .nm-col.me{color:var(--acc)}
 </style></head><body><div id="app"></div>
 <script>
 const Q0=[
@@ -235,28 +246,41 @@ function results(){
   }));
 }
 
-/* ---------- top 5 modal helpers ---------- */
+/* ---------- top 5 modal helpers (with histogram) ---------- */
 function top5ModalHTML(){
   return `<div id="top5-modal" class="modal" style="display:none">
     <div class="modal-card">
       <h2>🏆 Top 5 Participants</h2>
-      <ol class="lb" id="top5-list"></ol>
+      <div id="top5-list"></div>
       <button class="btn" onclick="closeTop5()">Close</button>
     </div>
   </div>`;
 }
 function showTop5(){
   const rows=(st.allRows||[]).slice().sort((a,b)=>b.score-a.score||a.ms-b.ms).slice(0,5);
-  const medals=['🥇','🥈','🥉','4','5'];
+  const medals=['🥇','🥈','🥉','4️⃣','5️⃣'];
+  const max=Math.max(...rows.map(p=>p.score||0),1);
   const list=$('#top5-list');
   if(list){
-    list.innerHTML = rows.length
-      ? rows.map((p,i)=>`<li class="${p.id===pid?'me':''}">
-          <span class="rk">${medals[i]}</span>
-          <span class="nm">${esc(p.name)}${p.id===pid?' (you)':''}</span>
-          <b>${p.score}</b>
-        </li>`).join('')
-      : '<li>No scores yet.</li>';
+    if(!rows.length){
+      list.innerHTML='<p class="sub" style="text-align:center;margin:0">No scores yet.</p>';
+    } else {
+      const bars=rows.map(p=>{
+        const h=Math.max(4,Math.round((p.score/max)*100));
+        return `<div class="hist-col">
+          <div class="hist-bar${p.id===pid?' me':''}" style="height:${h}%">
+            <span class="hist-val">${p.score}</span>
+          </div>
+        </div>`;
+      }).join('');
+      const names=rows.map((p,i)=>
+        `<div class="nm-col${p.id===pid?' me':''}">${medals[i]} ${esc(p.name)}${p.id===pid?' (you)':''}</div>`
+      ).join('');
+      list.innerHTML=`<div class="hist">
+        <div class="hist-bars">${bars}</div>
+        <div class="hist-names">${names}</div>
+      </div>`;
+    }
   }
   const m=$('#top5-modal'); if(m) m.style.display='flex';
 }
