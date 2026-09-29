@@ -1,4 +1,4 @@
-<!doctype html>
+ <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MDC Quiz</title>
@@ -14,9 +14,11 @@ body{margin:0;background:linear-gradient(160deg,#dbe8ff,#c3d6f8 60%,#b3caf3);col
 h1{margin:0 0 4px;font-size:28px}h2{white-space:pre-wrap;font-size:20px;margin:18px 0}h3{margin:20px 0 6px}
 .sub{color:var(--mut);margin:0 0 16px}
 label{display:block;font-weight:700;font-size:14px;margin:12px 0}
-input,textarea{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:12px 14px;border:2px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);font:inherit}
-input:focus,textarea:focus{outline:none;border-color:var(--acc)}
+input,textarea,select{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:12px 14px;border:2px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--acc)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--mut) 50%),linear-gradient(135deg,var(--mut) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:40px}
 #rc{text-transform:uppercase;letter-spacing:.2em;font-weight:800}
+#rn{text-transform:uppercase}
 .btn{width:100%;margin-top:10px;padding:14px;border:0;border-radius:14px;background:linear-gradient(90deg,var(--acc),var(--acc2));color:#fff;font:800 16px Inter,sans-serif;cursor:pointer}
 .btn:active{transform:scale(.98)}.btn.alt{background:var(--ink);color:var(--card)}
 .lnk{display:inline-block;margin-top:14px;color:var(--acc);font-weight:700;cursor:pointer}
@@ -49,7 +51,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--acc)}
 .stats div{background:var(--bg);border-radius:12px;padding:10px;text-align:center;font-size:12px;color:var(--mut)}
 .stats b{display:block;font-size:22px;color:var(--ink)}
 .tw{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:940px}
 th{text-align:left;color:var(--mut);font-size:12px;padding:6px 8px;border-bottom:2px solid var(--line)}
 td{padding:9px 8px;border-bottom:1px solid var(--line)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--mut)}
@@ -77,6 +79,10 @@ const Q0=[
 ["Which complexity is associated with generating all subsets of a set containing n elements?","O(n)|O(n²)|O(n log n)|O(2ⁿ)",3,3],
 ["What is the time complexity?\nfor(int i = 0; i < n; i++) { for(int j = 1; j <= i; j++) { for(int k = 1; k <= j; k++) cout << k; } }","O(n²)|O(n³)|O(n log n)|O(2ⁿ)",1,3],
 ["An algorithm has the recurrence T(n) = 2T(n/2) + O(n). What is its time complexity?","O(n)|O(log n)|O(n log n)|O(n²)",2,3]];
+
+/* ---- signup options ---- */
+const YEARS=['1st Year','2nd Year','3rd Year','4th Year'];
+const DEPTS=['CSE-AIML','Core','CS','DS'];
 
 const $=s=>document.querySelector(s), app=$('#app');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -117,26 +123,36 @@ const unsub=()=>{subs.forEach(f=>f());subs=[];clearInterval(tick)};
 
 function home(){
   unsub(); st={};
-  show(`<main class="card"><h1>MDC Quiz</h1><p class="sub">Hey there! Pop in the room code your host shared and pick a name your friends will recognise.</p>
+  const ySel=ls.get('mdc_year'), dSel=ls.get('mdc_dept');
+  show(`<main class="card"><h1>MDC Quiz</h1><p class="sub">Hey there! Pop in the room code your host shared and fill in your details.</p>
   <label>Room code<input id="rc" maxlength="5" placeholder="ABCDE" autocapitalize="characters" value="${esc(location.hash.slice(1).slice(0,5))}"></label>
   <label>Your display name<input id="nm" maxlength="20" placeholder="e.g. Priya" value="${esc(ls.get('mdc_name')||'')}"></label>
+  <label>Mail ID<input id="em" type="email" inputmode="email" autocomplete="email" placeholder="e.g. priya@college.edu" value="${esc(ls.get('mdc_mail')||'')}"></label>
+  <label>Registration number<input id="rn" maxlength="20" placeholder="e.g. 21CS1234" value="${esc(ls.get('mdc_reg')||'')}"></label>
+  <label>Year<select id="yr">${YEARS.map(y=>`<option${y===ySel?' selected':''}>${esc(y)}</option>`).join('')}</select></label>
+  <label>Department<select id="dp">${DEPTS.map(d=>`<option${d===dSel?' selected':''}>${esc(d)}</option>`).join('')}</select></label>
   <button class="btn" onclick="join()">Join the room →</button><p id="msg" class="msg"></p>
   <a class="lnk" onclick="openHost()">Admin portal →</a></main>`);
 }
 
 async function join(){
-    const c=$('#rc').value.trim().toUpperCase(), n=$('#nm').value.trim();
+  const c=$('#rc').value.trim().toUpperCase(), n=$('#nm').value.trim();
+  const email=$('#em').value.trim(), reg=$('#rn').value.trim().toUpperCase();
+  const year=$('#yr').value, dept=$('#dp').value;
   if(!c||!n) return msg('Both a room code and a name, please 🙂');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return msg('Please enter a valid mail ID (e.g. priya@college.edu).');
+  if(!reg) return msg('Please add your registration number.');
   try{
     const s=await rref(c).get();
     if(!s.exists) return msg("Hmm, can't find that room. Double-check the code?");
     const r=s.data(); if(r.status==='ended') return msg('That quiz has already finished.');
-    st={c,n,r,i:0,score:0,ok:0,ms:0,v:''};
+    st={c,n,r,i:0,score:0,ok:0,ms:0,v:'',email,reg,year,dept};
     const p=await pcol(c).doc(pid).get(), now=Date.now();
     if(p.exists){const d=p.data();Object.assign(st,{i:d.done||0,score:d.score||0,ok:d.ok||0,ms:d.ms||0,n:d.name});
-      await pcol(c).doc(pid).update({last:now,logins:(d.logins||1)+1})}
-    else await pcol(c).doc(pid).set({name:n,score:0,ok:0,ms:0,done:0,fin:false,joined:now,last:now,logins:1});
-    ls.set('mdc_name',n); unsub();
+      await pcol(c).doc(pid).update({last:now,logins:(d.logins||1)+1,email,reg,year,dept})}
+    else await pcol(c).doc(pid).set({name:n,email,reg,year,dept,score:0,ok:0,ms:0,done:0,fin:false,joined:now,last:now,logins:1});
+    ls.set('mdc_name',n); ls.set('mdc_mail',email); ls.set('mdc_reg',reg); ls.set('mdc_year',year); ls.set('mdc_dept',dept);
+    unsub();
     subs.push(rref(c).onSnapshot(s=>{if(s.exists){st.r=s.data();route()}}));
     subs.push(pcol(c).doc(pid).onSnapshot(s=>{if(!s.exists&&st.v){unsub();st.v='';show('<main class="card center"><div class="big">👋</div><h1>You were removed</h1><p class="sub">The host took you out of this room.</p><a class="lnk" onclick="home()">Back to start</a></main>')}}));
   }catch(e){msg('Could not join: '+(e.message||e.code))}
@@ -148,7 +164,7 @@ function route(){
   if(w===st.v) return; st.v=w; ({end:results,lobby,q:ask})[w]();
 }
 function lobby(){
-  show(`<main class="card center"><div class="big">☕</div><h1>You're in, ${esc(st.n)}!</h1><p class="sub">${esc(st.r.title)} · ${st.r.qs.length} questions · ${st.r.secs}s each.<br>Sit tight, the host will start things shortly.</p></main>`);
+  show(`<main class="card center"><div class="big">☕</div><h1>You're in, ${esc(st.n)}!</h1><p class="sub">${esc(st.r.title)} · ${st.r.qs.length} questions · ${st.r.secs}s each.<br>${esc(st.year)} · ${esc(st.dept)}<br>Sit tight, the host will start things shortly.</p></main>`);
 }
 function ask(){
   const q=st.r.qs[st.i], S=st.r.secs||25, t0=Date.now(); let locked=false;
@@ -174,14 +190,14 @@ function results(){
 }
 function board(rows,adm){
   const N=st.r?st.r.qs.length:0; rows.sort((a,b)=>b.score-a.score||a.ms-b.ms);
-  return `<ol class="lb">${rows.map((p,i)=>`<li class="${p.id===pid?'me':''}"><span class="rk">${['🥇','🥈','🥉'][i]||i+1}</span><span class="nm">${esc(p.name)}${p.id===pid?' (you)':''}</span>${adm?`<small>${p.done}/${N} · ${p.ok} ✓</small>`:`<small>${p.fin?'':'playing…'}</small>`}<small>${(p.ms/1000).toFixed(1)}s</small><b>${p.score}</b>${adm?`<button class="x" title="Remove" onclick="kick('${p.id}')">✕</button>`:''}</li>`).join('')||'<p class="sub">Nobody here yet.</p>'}</ol>`;
+  return `<ol class="lb">${rows.map((p,i)=>`<li class="${p.id===pid?'me':''}"><span class="rk">${['🥇','🥈','🥉'][i]||i+1}</span><span class="nm">${esc(p.name)}${p.id===pid?' (you)':''}</span>${adm?`<small>${esc(p.year||'—')} · ${esc(p.dept||'—')}</small><small>${p.done}/${N} · ${p.ok} ✓</small>`:`<small>${p.fin?'':'playing…'}</small>`}<small>${(p.ms/1000).toFixed(1)}s</small><b>${p.score}</b>${adm?`<button class="x" title="Remove" onclick="kick('${p.id}')">✕</button>`:''}</li>`).join('')||'<p class="sub">Nobody here yet.</p>'}</ol>`;
 }
 function logins(rows){
   const N=st.r.qs.length, now=Date.now();
   rows=rows.slice().sort((a,b)=>(a.joined||0)-(b.joined||0));
-  return `<div class="tw"><table><thead><tr><th>#</th><th>Player</th><th>Logged in</th><th>Last active</th><th>Logins</th><th>Progress</th><th>Status</th><th></th></tr></thead><tbody>${rows.map((p,i)=>{
+  return `<div class="tw"><table><thead><tr><th>#</th><th>Player</th><th>Mail ID</th><th>Reg. No.</th><th>Year</th><th>Department</th><th>Logged in</th><th>Last active</th><th>Logins</th><th>Progress</th><th>Status</th><th></th></tr></thead><tbody>${rows.map((p,i)=>{
     const on=p.last&&now-p.last<30000, s=p.fin?'Finished':p.done?'Playing':'In lobby';
-    return `<tr><td>${i+1}</td><td><b>${esc(p.name)}</b></td><td>${tm(p.joined)}</td><td>${tm(p.last)}</td><td>${p.logins||1}</td><td>${p.done}/${N}</td><td><span class="dot ${p.fin?'':on?'on':'dn'}"></span>${s}${on&&!p.fin?' · online':''}</td><td><button class="x" title="Remove" onclick="kick('${p.id}')">✕</button></td></tr>`}).join('')||'<tr><td colspan="8" class="sub">Nobody has logged in yet.</td></tr>'}</tbody></table></div>`;
+    return `<tr><td>${i+1}</td><td><b>${esc(p.name)}</b></td><td>${esc(p.email||'—')}</td><td>${esc(p.reg||'—')}</td><td>${esc(p.year||'—')}</td><td>${esc(p.dept||'—')}</td><td>${tm(p.joined)}</td><td>${tm(p.last)}</td><td>${p.logins||1}</td><td>${p.done}/${N}</td><td><span class="dot ${p.fin?'':on?'on':'dn'}"></span>${s}${on&&!p.fin?' · online':''}</td><td><button class="x" title="Remove" onclick="kick('${p.id}')">✕</button></td></tr>`}).join('')||'<tr><td colspan="12" class="sub">Nobody has logged in yet.</td></tr>'}</tbody></table></div>`;
 }
 
 /* ---------- admin portal ---------- */
